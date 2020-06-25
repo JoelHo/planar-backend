@@ -1,8 +1,17 @@
+import os
+
 from flask import Flask, jsonify, abort, request, url_for, session
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
 app = Flask(__name__)
+
+app.secret_key = os.environ['SECRET_KEY']
+CLIENT_ID = os.environ['CLIENT_ID']
+
+
+def is_logged_in():
+    return 'logged_in' in session and session['logged_in']
 
 
 @app.route('/planar/api/v1.0/verify', methods=['POST'])
@@ -13,7 +22,7 @@ def verify():
     try:
         # Specify the CLIENT_ID of the app that accesses the backend:
         idinfo = id_token.verify_oauth2_token(request.json['idtoken'], requests.Request(),
-                                              'REMOVED')
+                                              CLIENT_ID)
 
         # Or, if multiple clients access the backend server:
         # idinfo = id_token.verify_oauth2_token(token, requests.Request())
@@ -31,18 +40,34 @@ def verify():
         userid = idinfo['sub']
         session['logged_in'] = True
         session['userid'] = userid
-        return jsonify({'result': True})
+        return jsonify({'result': "Success"})
     except ValueError:
-        return jsonify({'result': False})
+        return jsonify({'result': "Invalid ID!"})
         # Invalid token
+
+
+@app.route('/planar/api/v1.0/update_assignments', methods=['POST'])
+def ver():
+    if is_logged_in():
+        return jsonify({'result': "Success"})
+    else:
+        return jsonify({'result': "Not Logged in!"})
+
+
+@app.route('/planar/api/v1.0/get_assignments', methods=['GET'])
+def test():
+    if is_logged_in():
+        return jsonify({'result': "Success"})
+    else:
+        return jsonify({'result': "Not Logged in!"})
 
 
 @app.route('/planar/api/v1.0/logout')
 def logout():
-    session['logged_in'] = True
-    return jsonify({'result': True})
+    session.pop('logged_in', None)
+    session.pop('userid', None)
+    return jsonify({'result': "Success"})
 
 
 if __name__ == '__main__':
-
     app.run(debug=True)
