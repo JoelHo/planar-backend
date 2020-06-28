@@ -14,7 +14,7 @@ def is_logged_in():
     return 'logged_in' in session and session['logged_in']
 
 
-@app.route('/planar/api/v1.0/verify', methods=['POST'])
+@app.route('/verify', methods=['POST'])
 def verify():
     print(request.json)
     if not request.json or not 'idtoken' in request.json:
@@ -23,7 +23,7 @@ def verify():
         # Specify the CLIENT_ID of the app that accesses the backend:
         idinfo = id_token.verify_oauth2_token(request.json['idtoken'], requests.Request(),
                                               CLIENT_ID)
-
+        print(idinfo)
         # Or, if multiple clients access the backend server:
         # idinfo = id_token.verify_oauth2_token(token, requests.Request())
         # if idinfo['aud'] not in [CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]:
@@ -46,23 +46,25 @@ def verify():
         # Invalid token
 
 
-@app.route('/planar/api/v1.0/update_assignments', methods=['POST'])
-def ver():
+@app.route('/update_assignments', methods=['POST'])
+def update():
+    print(request.json)
+    if is_logged_in():
+        print(request.json)
+        return jsonify({'result': "Success"})
+    else:
+        return jsonify({'result': "Not Logged in!"})
+
+
+@app.route('/get_assignments', methods=['GET'])
+def get():
     if is_logged_in():
         return jsonify({'result': "Success"})
     else:
         return jsonify({'result': "Not Logged in!"})
 
 
-@app.route('/planar/api/v1.0/get_assignments', methods=['GET'])
-def test():
-    if is_logged_in():
-        return jsonify({'result': "Success"})
-    else:
-        return jsonify({'result': "Not Logged in!"})
-
-
-@app.route('/planar/api/v1.0/logout')
+@app.route('/logout')
 def logout():
     session.pop('logged_in', None)
     session.pop('userid', None)
