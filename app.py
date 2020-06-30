@@ -52,8 +52,8 @@ def verify():
 
 @app.route('/planar/api/v1.0/assignments', methods=['POST', 'GET'])
 def assignment():
-    # if not is_logged_in():
-    #     return jsonify({'reponse': "Not Logged in!"})
+    if not is_logged_in():
+        return jsonify({'reponse': "Not Logged in!"})
     user = User.query.get(session['userid'])
     if request.method == 'POST':
         if request.is_json:
@@ -81,8 +81,8 @@ def assignment():
 
 @app.route('/planar/api/v1.0/modules', methods=['POST', 'GET'])
 def subject():
-    # if not is_logged_in():
-    #     return jsonify({'reponse': "Not Logged in!"})
+    if not is_logged_in():
+        return jsonify({'reponse': "Not Logged in!"})
     user = User.query.get(session['userid'])
     if request.method == 'POST':
         if request.is_json:
