@@ -183,7 +183,7 @@ def tele_assign(id, mod):
     for ass in user.assignments:
         if ass.module == mod:
             response[ass.assign_id] = ass.asJson()
-    return json.dumps(response)
+    return jsonify(response)
 
 
 @app.route('/planar/api/v1.0/tele/<id>/notes/<mod>', methods=['GET'])
@@ -193,7 +193,7 @@ def tele_notes(id, mod):
     for note in user.notes:
         if note.module == mod:
             response[note.note_id] = note.asJson()
-    return json.dumps(response)
+    return jsonify(response)
 
 
 @app.route('/set/<id>')
