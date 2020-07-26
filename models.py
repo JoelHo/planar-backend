@@ -46,8 +46,9 @@ class Notes(db.Model):
     def __repr__(self):
         return '<id {}>'.format(self.note_id)
 
-    def asJson(self):
-        return {'content': self.content}
+    def as_json(self):
+        return {'id': self.note_id,
+                'notes': self.content}
 
 
 class Assignments(db.Model):
@@ -71,8 +72,9 @@ class Assignments(db.Model):
     def __repr__(self):
         return '<id {}>'.format(self.assign_id)
 
-    def asJson(self):
-        return {'date': (self.date - date(1970, 1, 1)).total_seconds(),
+    def as_json(self):
+        return {'id': self.assign_id,
+                'deadline': (self.date - date(1970, 1, 1)).total_seconds(),
                 'complete': self.complete,
-                'content': self.content
+                'assignmentDescription': self.content
                 }
