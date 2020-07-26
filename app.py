@@ -1,5 +1,5 @@
 import hashlib
-from datetime import datetime
+from datetime import datetime, date
 import os
 import json
 
@@ -91,32 +91,32 @@ def assign(mod):
     user = User.query.get(session['userid'])
     if request.method == 'POST':
         if request.is_json:
-            for id in request.json:
-                assignment_obj = Assignments.query.get(id)
-                assignment_data = request.json[id]
+            for assignment in request.json:
+                assignment_obj = Assignments.query.get(assignment['id'])
                 if assignment_obj is not None:
-                    assignment_obj.date = datetime.utcfromtimestamp(assignment_data['date'])
-                    assignment_obj.complete = assignment_data['complete']
-                    assignment_obj.content = assignment_data['content']
+                    assignment_obj.user_id = session['userid'];
+                    assignment_obj.date = datetime.utcfromtimestamp(assignment['deadline'])
+                    assignment_obj.complete = False
+                    assignment_obj.content = assignment['assignmentDescription']
                 else:
                     assignment_obj = Assignments(
-                        id,
+                        assignment['id'],
                         session['userid'],
                         mod,
-                        datetime.utcfromtimestamp(assignment_data['date']),
-                        assignment_data['complete'],
-                        assignment_data['content']
+                        datetime.utcfromtimestamp(assignment['deadline']),
+                        False,
+                        assignment['assignmentDescription']
                     )
                 db.session.add(assignment_obj)
                 db.session.commit()
             return jsonify({'reponse': "Updated assignments for user " + session['userid']})
         return jsonify({'reponse': 'Invalid request!'})
     if request.method == 'GET':
-        response = {}
+        response = []
         for ass in user.assignments:
             if ass.module == mod:
-                response[ass.assign_id] = ass.asJson()
-        return json.dumps(response)
+                response.append(ass.as_json())
+        return jsonify(response)
 
 
 @app.route('/planar/api/v1.0/notes/<mod>', methods=['POST', 'GET'])
@@ -126,23 +126,33 @@ def notes(mod):
     user = User.query.get(session['userid'])
     if request.method == 'POST':
         if request.is_json:
-            for id in request.json:
-                note_obj = Notes.query.get(id)
-                note_data = request.json[id]
+            for note in request.json:
+                note_obj = Notes.query.get(note['id'])
                 if note_obj is not None:
-                    note_obj.content = note_data['content']
+                    note_obj.content = note['notes']
                 else:
-                    note_obj = Notes(id, session['userid'], mod, note_data['content'])
+                    note_obj = Notes(note['id'], session['userid'], mod, note['notes'])
                 db.session.add(note_obj)
                 db.session.commit()
             return jsonify({'reponse': "Updated notes for user " + session['userid']})
         return jsonify({'reponse': 'Invalid request!'})
     if request.method == 'GET':
-        response = {}
+        response = []
         for note in user.notes:
             if note.module == mod:
-                response[note.note_id] = note.asJson()
-        return json.dumps(response)
+                response.append(note.as_json())
+        return jsonify(response)
+
+
+@app.route('/planar/api/v1.0/assignmentDates', methods=['GET'])
+def ass_dates():
+    if not is_logged_in():
+        return jsonify({'reponse': "Not Logged in!"})
+    user = User.query.get(session['userid'])
+    response = {}
+    for ass in user.assignments:
+        response[ass.module] = (ass.date - date(1970, 1, 1)).total_seconds()
+    return jsonify(response)
 
 
 @app.route('/planar/api/v1.0/get_tele_token', methods=['GET'])
@@ -182,7 +192,7 @@ def tele_assign(id, mod):
     response = {}
     for ass in user.assignments:
         if ass.module == mod:
-            response[ass.assign_id] = ass.asJson()
+            response[ass.assign_id] = ass.as_json()
     return jsonify(response)
 
 
@@ -192,11 +202,11 @@ def tele_notes(id, mod):
     response = {}
     for note in user.notes:
         if note.module == mod:
-            response[note.note_id] = note.asJson()
+            response[note.note_id] = note.as_json()
     return jsonify(response)
 
 
-@app.route('/set/<id>')
+@app.route('/planar/api/v1.0/set/<id>')
 def set_dummy(id):
     session['userid'] = id
     session['logged_in'] = True
@@ -208,7 +218,7 @@ def set_dummy(id):
     return jsonify({'reponse': 'set id to ' + session['userid']})
 
 
-@app.route('/getid')
+@app.route('/planar/api/v1.0/getid')
 def getid():
     return jsonify({'reponse': 'id is ' + session['userid']})
 
