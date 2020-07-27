@@ -84,7 +84,7 @@ def subject():
         return jsonify(user.modules)
 
 
-@app.route('/planar/api/v1.0/assignments/<mod>', methods=['POST', 'GET'])
+@app.route('/planar/api/v1.0/assignments/<mod>', methods=['POST', 'GET', 'DELETE'])
 def assign(mod):
     if not is_logged_in():
         return jsonify({'reponse': "Not Logged in!"})
@@ -117,9 +117,17 @@ def assign(mod):
             if ass.module == mod:
                 response.append(ass.as_json())
         return jsonify(response)
+    if request.method == 'DELETE':
+        ass = Assignments.query.filter(assign_id=mod)
+        if ass is not None:
+            ass.delete()
+            db.session.commit()
+            return jsonify({'reponse': "Deleted assignment " + mod})
+        else:
+            return jsonify({'reponse': "Assignment not found!"})
 
 
-@app.route('/planar/api/v1.0/notes/<mod>', methods=['POST', 'GET'])
+@app.route('/planar/api/v1.0/notes/<mod>', methods=['POST', 'GET', 'DELETE'])
 def notes(mod):
     if not is_logged_in():
         return jsonify({'reponse': "Not Logged in!"})
@@ -142,6 +150,14 @@ def notes(mod):
             if note.module == mod:
                 response.append(note.as_json())
         return jsonify(response)
+    if request.method == 'DELETE':
+        note = Notes.query.filter(note_id=mod)
+        if note is not None:
+            note.delete()
+            db.session.commit()
+            return jsonify({'reponse': "Deleted note " + mod})
+        else:
+            return jsonify({'reponse': "Note not found!"})
 
 
 @app.route('/planar/api/v1.0/assignmentDates', methods=['GET'])
